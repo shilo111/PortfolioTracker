@@ -1,11 +1,15 @@
 ﻿@model List<PortfolioTracker.Models.PortfolioItem>
+
+
 <head>
+
+    <base href="/PortfolioTracker/">
     <style>
         .layout-container {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 59px; /* רווח גדול יותר בין הטבלה לגרפים */
+            gap: 60px; /* רווח גדול יותר בין הטבלה לגרפים */
             margin-top: 20px;
         }
 
@@ -118,7 +122,7 @@
                     <h3>פיזור תיק ההשקעות</h3>
                     <canvas id="portfolioPieChart"></canvas>
                     <div class="active-portfolio-size mt-3">
-                        
+
                         <span id="activePortfolioSize" style="font-size: 18px; font-weight: bold;"></span>
                     </div>
                 </div>
