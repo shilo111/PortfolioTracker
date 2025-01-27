@@ -1,0 +1,116 @@
+﻿@model List<PortfolioTracker.Models.PortfolioItem>
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">תצוגת היסטוריה</h1>
+
+    <!-- כפתור הוספת עסקה -->
+    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addHistoryModal">
+        הוסף עסקת עבר
+    </button>
+
+    @if (Model != null && Model.Any())
+    {
+        <!-- הפרדת נתונים לפי חודשים -->
+        foreach (var group in Model.GroupBy(item => item.DateAdded.ToString("MMMM yyyy")))
+        {
+            <h3 class="mt-4">@group.Key</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Stock</th>
+                        <th>Quantity</th>
+                        <th>Price ($)</th>
+                        <th>Day Change (%)</th>
+                        <th>Purchase Price ($)</th>
+                        <th>Investment ($)</th>
+                        <th>P/L ($)</th>
+                        <th>P/L (%)</th>
+                        <th>Date Added</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in group)
+                    {
+                        <tr>
+                            <td>@item.Stock</td>
+                            <td>@item.Quantity.ToString("0.00")</td>
+                            <td>@item.Price.ToString("0.00")</td>
+                            <td class="pl-percentage" data-value="@item.ChangePercentage">@item.ChangePercentage.ToString("0.00") %</td>
+                            <td>@item.PurchasePrice.ToString("0.00")</td>
+                            <td>@item.Investment.ToString("0.00")</td>
+                            <td class="pl-value" data-value="@item.ProfitLoss">@item.ProfitLoss.ToString("0.00")</td>
+                            <td class="pl-percentage" data-value="@item.ProfitLossPercentage">@item.ProfitLossPercentage.ToString("0.00") %</td>
+                            <td>@item.DateAdded.ToShortDateString()</td>
+                            <td>
+                                <form action="/Portfolio/DeleteStockFromHistory" method="post">
+                                    <input type="hidden" name="stock" value="@item.Stock" />
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        }
+    }
+</div>
+
+<!-- Modal להוספת עסקה -->
+<div class="modal fade" id="addHistoryModal" tabindex="-1" aria-labelledby="addHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addHistoryModalLabel">הוסף עסקת עבר</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- טופס להוספת עסקת עבר -->
+                <!-- טופס להוספת עסקת עבר -->
+                <form id="addToHistoryForm" action="/Portfolio/AddToFull" method="post">
+                    <div class="mb-3">
+                        <label for="stock" class="form-label">Stock Symbol- Capital letters!:</label>
+                        <input type="text"
+                               id="stock"
+                               name="stock"
+                               class="form-control"
+                               required
+                               oninput="this.value = this.value.toUpperCase();">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="purchasePrice" class="form-label">Purchase Price ($):</label>
+                        <input type="number" id="purchasePrice" name="purchasePrice" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="investment" class="form-label">Investment Amount ($):</label>
+                        <input type="number" id="investment" name="investment" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dateAdded" class="form-label">Date:</label>
+                        <input type="date" id="dateAdded" name="dateAdded" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add to History</button>
+                </form>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>document.addEventListener("DOMContentLoaded", function () {
+        // צביעת תאי P/L
+        document.querySelectorAll(".pl-value, .pl-percentage").forEach(cell => {
+            const value = parseFloat(cell.getAttribute("data-value"));
+            if (!isNaN(value)) {
+                if (value < 0) {
+                    cell.style.color = "red"; // צבע אדום אם הערך שלילי
+                } else if (value > 0) {
+                    cell.style.color = "green"; // צבע ירוק אם הערך חיובי
+                }
+            }
+        });
+    });
+</script>

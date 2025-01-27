@@ -1,0 +1,300 @@
+﻿@model List<PortfolioTracker.Models.PortfolioItem>
+<head>
+    <style>
+        .layout-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px; /* רווח גדול יותר בין הטבלה לגרפים */
+            margin-top: 20px;
+        }
+
+        .table-container {
+            flex: 1; /* התאמה אוטומטית לגודל */
+            max-width: 45%; /* מקסימום רוחב לטבלה */
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .graph-container {
+            flex: 1; /* התאמה אוטומטית לגודל */
+            display: flex;
+            flex-direction: column; /* גרפים אחד מתחת לשני */
+            gap: 30px; /* רווח בין הגרפים */
+            max-width: 50%; /* מקסימום רוחב לגרפים */
+        }
+
+        .graph-item {
+            width: 100%; /* התאמה לרוחב הקונטיינר */
+            height: 350px; /* גובה הגרפים */
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+            .graph-item canvas {
+                width: 100%;
+                height: 100%;
+            }
+    </style>
+
+</head>
+
+<body>
+    <!-- כפתור הוספת מניה -->
+    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addStockModal">
+        הוסף מניה
+    </button>
+
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Trading</h1>
+
+        <div class="layout-container">
+            <!-- טבלה -->
+            <div class="table-container">
+                <h3 class="text-center">Portfoilio</h3>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Stock</th>
+                            <th>Price ($)</th>
+                            <th>P/L Day (%)</th>
+                            <th>P/L (%)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Stock</td>
+                                <td>@item.Price.ToString("0.00")</td>
+                                <td>@item.ChangePercentage.ToString("0.00") %</td>
+                                <td class="pl-value" data-value="@item.ProfitLoss">
+                                    @item.ProfitLoss.ToString("0.00")
+                                </td>
+                                <td class="pl-percentage" data-value="@item.ProfitLossPercentage">
+                                    @item.ProfitLossPercentage.ToString("0.00") %
+                                </td>
+                                <td>
+                                    <form action="/Portfolio/DeleteStock" method="post">
+                                        <input type="hidden" name="stock" value="@item.Stock" />
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- גרפים -->
+            <div class="graph-container">
+                <!-- גרף עוגה -->
+                <div class="graph-item">
+                    <h3>פיזור תיק ההשקעות</h3>
+                    <canvas id="portfolioPieChart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h2 class="text-center">השוואה באחוזים מול S&P 500</h2>
+                    <canvas id="barChart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h2 class="text-center">תשואה לאורך זמן</h2>
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<!-- Modal להוספת מניה -->
+<div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addStockModalLabel">הוסף מניה</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addStockForm" action="/Portfolio/AddStock" method="post">
+                    <div class="mb-3">
+                        <label for="stock" class="form-label">Stock Symbol- Capital letters!:</label>
+                        <input type="text"
+                               id="stock"
+                               name="stock"
+                               class="form-control"
+                               required
+                               oninput="this.value = this.value.toUpperCase();">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="purchasePrice" class="form-label">Purchase Price ($):</label>
+                        <input type="number" id="purchasePrice" name="purchasePrice" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="investment" class="form-label">Investment Amount ($):</label>
+                        <input type="number" id="investment" name="investment" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="dateAdded" class="form-label">Date:</label>
+                        <input type="date" id="dateAdded" name="dateAdded" class="form-control" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Add Stock</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- הוספת ספריות Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+<!-- סקריפט לגרפים -->
+<script>
+ document.addEventListener("DOMContentLoaded", async function () {
+    // פונקציה לצביעת תאי P/L
+    document.querySelectorAll(".pl-value, .pl-percentage").forEach(cell => {
+        const value = parseFloat(cell.getAttribute("data-value"));
+        if (!isNaN(value)) {
+            cell.style.color = value < 0 ? "red" : "green";
+        }
+    });
+
+    // פונקציה לשליפת נתוני תשואות S&P 500
+    async function fetchSP500Returns() {
+        try {
+            const response = await fetch('/Portfolio/GetSP500Returns');
+            const sp500Returns = await response.json();
+
+            if (sp500Returns.error) {
+                console.error("Error fetching S&P 500 data:", sp500Returns.error);
+                return Array(12).fill(0); // במקרה של שגיאה, מחזירים מערך של אפסים
+            }
+
+            return sp500Returns;
+        } catch (error) {
+            console.error("Failed to fetch S&P 500 data:", error);
+            return Array(12).fill(0); // במקרה של שגיאה, מחזירים מערך של אפסים
+        }
+    }
+
+    // נתוני הגרפים
+    const labelsBar = @Html.Raw(Json.Encode(ViewBag.Months)); // חודשים
+    const myReturnsBar = @Html.Raw(Json.Encode(ViewBag.MonthlyReturns)); // תשואות חודשיות שלי
+
+    // שליפת נתוני S&P 500
+    const sp500ReturnsBar = await fetchSP500Returns();
+
+    // יצירת גרף עוגה
+    const labelsPie = @Html.Raw(Json.Encode(Model.Select(p => p.Stock))); // שמות המניות
+    const dataPie = @Html.Raw(Json.Encode(Model.Select(p => p.Investment))); // השקעות
+    const totalInvestmentPie = dataPie.reduce((sum, value) => sum + value, 0); // סך הכל השקעות
+    const ctxPie = document.getElementById('portfolioPieChart').getContext('2d');
+    new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: labelsPie,
+            datasets: [{
+                data: dataPie.map(value => ((value / totalInvestmentPie) * 100).toFixed(2)), // חישוב אחוזים
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                datalabels: {
+                    color: '#fff',
+                    font: { size: 14, weight: 'bold' },
+                    formatter: (value, context) => `${context.chart.data.labels[context.dataIndex]}\n${value}%`
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+
+    // יצירת גרף עמודות
+    const ctxBar = document.getElementById('barChart').getContext('2d');
+    new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+            labels: labelsBar,
+            datasets: [
+                {
+                    label: 'My Returns (%)',
+                    data: myReturnsBar,
+                    backgroundColor: '#36A2EB',
+                },
+                {
+                    label: 'S&P 500 Returns (%)',
+                    data: sp500ReturnsBar,
+                    backgroundColor: '#FF6384',
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(2)}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // יצירת גרף קו
+    const ctxLine = document.getElementById('lineChart').getContext('2d');
+    new Chart(ctxLine, {
+        type: 'line',
+        data: {
+            labels: labelsBar,
+            datasets: [
+                {
+                    label: 'My Returns (%)',
+                    data: myReturnsBar,
+                    borderColor: '#36A2EB',
+                    fill: false
+                },
+                {
+                    label: 'S&P 500 Returns (%)',
+                    data: sp500ReturnsBar,
+                    borderColor: '#FF6384',
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(2)}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+
+</script>
+
