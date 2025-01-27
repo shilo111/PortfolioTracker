@@ -17,5 +17,16 @@ namespace PortfolioTracker.Models
         public decimal ProfitLossPercentage { get; set; } // אחוזי רווח/הפסד
         public DateTime DateAdded { get; set; }
     }
+    public class MonthlyTransactionsViewModel
+    {
+        public string Month { get; set; } // שם החודש (למשל ינואר)
+        public List<PortfolioItem> Items { get; set; } // רשימת העסקאות שבוצעו באותו חודש
+    }
+    public class YearlyProfitViewModel
+    {
+        public int Year { get; set; } // השנה (למשל 2024)
+        public decimal TotalProfit { get; set; } // סך הרווחים לשנה
+        public List<MonthlyTransactionsViewModel> Transactions { get; set; } // רשימת עסקאות לפי חודשים
+    }
 
 }

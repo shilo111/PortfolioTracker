@@ -5,7 +5,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 40px; /* רווח גדול יותר בין הטבלה לגרפים */
+            gap: 59px; /* רווח גדול יותר בין הטבלה לגרפים */
             margin-top: 20px;
         }
 
@@ -23,7 +23,7 @@
             flex: 1; /* התאמה אוטומטית לגודל */
             display: flex;
             flex-direction: column; /* גרפים אחד מתחת לשני */
-            gap: 30px; /* רווח בין הגרפים */
+            gap: 50px; /* רווח בין הגרפים */
             max-width: 50%; /* מקסימום רוחב לגרפים */
         }
 
@@ -42,6 +42,22 @@
                 width: 100%;
                 height: 100%;
             }
+
+        #portfolio-details {
+            text-align: center;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .portfolio-size {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
     </style>
 
 </head>
@@ -65,6 +81,7 @@
                             <th>Stock</th>
                             <th>Price ($)</th>
                             <th>P/L Day (%)</th>
+                            <th>P/L ($)</th>
                             <th>P/L (%)</th>
                             <th>Actions</th>
                         </tr>
@@ -100,7 +117,12 @@
                 <div class="graph-item">
                     <h3>פיזור תיק ההשקעות</h3>
                     <canvas id="portfolioPieChart"></canvas>
+                    <div class="active-portfolio-size mt-3">
+                        
+                        <span id="activePortfolioSize" style="font-size: 18px; font-weight: bold;"></span>
+                    </div>
                 </div>
+
 
                 <div class="chart-container">
                     <h2 class="text-center">השוואה באחוזים מול S&P 500</h2>
@@ -135,6 +157,9 @@
                                required
                                oninput="this.value = this.value.toUpperCase();">
                     </div>
+
+
+
 
                     <div class="mb-3">
                         <label for="purchasePrice" class="form-label">Purchase Price ($):</label>
@@ -188,6 +213,17 @@
             return Array(12).fill(0); // במקרה של שגיאה, מחזירים מערך של אפסים
         }
     }
+
+    // חישוב גודל תיק פעיל
+    const activePortfolioSize = @Html.Raw(Json.Encode(Model.Sum(item => item.Price * (decimal)item.Quantity)));
+    const activePortfolioElement = document.createElement("div");
+    activePortfolioElement.id = "activePortfolioSize";
+    activePortfolioElement.style.textAlign = "center";
+    activePortfolioElement.style.marginTop = "10px";
+    activePortfolioElement.style.fontSize = "18px";
+    activePortfolioElement.style.fontWeight = "bold";
+    activePortfolioElement.textContent = `גודל תיק פעיל: $${activePortfolioSize.toFixed(2)}`;
+    document.querySelector("#portfolioPieChart").parentNode.insertBefore(activePortfolioElement, document.querySelector("#portfolioPieChart"));
 
     // נתוני הגרפים
     const labelsBar = @Html.Raw(Json.Encode(ViewBag.Months)); // חודשים

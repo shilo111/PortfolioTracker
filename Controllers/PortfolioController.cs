@@ -76,7 +76,7 @@ namespace PortfolioTracker.Controllers
 
 
         // פעולה להצגת ההיסטוריה
-        public ActionResult Full()
+        public ActionResult Full(DateTime? startDate, DateTime? endDate)
         {
             // עדכון אחוזי הרווח/הפסד עבור כל מניה בהיסטוריה
             foreach (var item in portfolioHistory)
@@ -84,9 +84,55 @@ namespace PortfolioTracker.Controllers
                 item.ProfitLossPercentage = item.Investment == 0 ? 0 : (item.ProfitLoss / item.Investment) * 100;
             }
 
+            // סינון לפי התקופה המבוקשת
+            var filteredHistory = portfolioHistory.AsQueryable();
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                filteredHistory = filteredHistory.Where(p => p.DateAdded >= startDate.Value && p.DateAdded <= endDate.Value);
+            }
 
-            return View(portfolioHistory);
+            decimal totalProfitInRange = filteredHistory.Sum(p => p.ProfitLoss);
+            ViewBag.TotalProfitInRange = totalProfitInRange;
+
+            // קיבוץ לפי שנים וחודשים
+            var yearlyData = filteredHistory
+                .GroupBy(p => p.DateAdded.Year)
+                .Select(yearGroup => new YearlyProfitViewModel
+                {
+                    Year = yearGroup.Key,
+                    TotalProfit = yearGroup.Sum(p => p.ProfitLoss),
+                    Transactions = yearGroup
+                        .GroupBy(p => p.DateAdded.ToString("MMMM"))
+                        .Select(monthGroup => new MonthlyTransactionsViewModel
+                        {
+                            Month = monthGroup.Key,
+                            Items = monthGroup.ToList()
+                        }).ToList()
+                }).ToList();
+
+            // שליחת התקופה ל-ViewBag להצגה בטופס
+            ViewBag.StartDate = startDate?.ToString("yyyy-MM-dd");
+            ViewBag.EndDate = endDate?.ToString("yyyy-MM-dd");
+
+            return View(yearlyData);
         }
+
+        [HttpPost]
+        public ActionResult FilterByDate(DateTime startDate, DateTime endDate)
+        {
+            var filteredTransactions = portfolioHistory
+                .Where(p => p.DateAdded >= startDate && p.DateAdded <= endDate)
+                .ToList();
+
+            decimal totalProfit = filteredTransactions.Sum(p => p.ProfitLoss);
+
+            ViewBag.FilteredTransactions = filteredTransactions;
+            ViewBag.TotalProfitForPeriod = totalProfit;
+
+            return View("Full", filteredTransactions);
+        }
+
+
         [HttpPost]
         public async Task<ActionResult> AddToFull(string stock, decimal purchasePrice, decimal investment, DateTime dateAdded)
         {
@@ -189,7 +235,7 @@ namespace PortfolioTracker.Controllers
             return RedirectToAction("Full");
         }
         [HttpGet]
-       
+
         public async Task<JsonResult> GetSP500Returns()
         {
             try
@@ -284,13 +330,16 @@ namespace PortfolioTracker.Controllers
                 return null;
             }
         }
-    }
 
-    // מחלקה לשליפת נתוני מניה מה-API
-    public class StockData
-    {
-        public string Stock { get; set; }
-        public decimal Price { get; set; }
-        public decimal ChangePercentage { get; set; }
+
+
+
+        // מחלקה לשליפת נתוני מניה מה-API
+        public class StockData
+        {
+            public string Stock { get; set; }
+            public decimal Price { get; set; }
+            public decimal ChangePercentage { get; set; }
+        }
     }
 }
