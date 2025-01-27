@@ -1,7 +1,47 @@
-﻿
-@{
-    ViewBag.Title = "Alerts";
+﻿@{
+    ViewBag.Title = "Portfolio Statistics";
 }
 
-<h2>Alerts</h2>
+<h2>Portfolio Statistics</h2>
 
+<ul>
+    <li>Total Investment: @ViewBag.TotalInvestment</li>
+    <li>Total Profit: @ViewBag.TotalProfit</li>
+    <li>Average Monthly Return: @ViewBag.AverageMonthlyReturn%</li>
+</ul>
+<script>// גרף Top 10 מרוויחות
+    async function fetchTopGainers() {
+        const response = await fetch('/Portfolio/GetTopGainers');
+        const data = await response.json();
+
+        new Chart(document.getElementById('topGainersChart'), {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.Stock),
+                datasets: [{
+                    label: 'Profit',
+                    data: data.map(d => d.Profit),
+                    backgroundColor: 'green',
+                }]
+            }
+        });
+    }
+
+    // גרף תחתית 10 מפסידות
+    async function fetchTopLosers() {
+        const response = await fetch('/Portfolio/GetTopLosers');
+        const data = await response.json();
+
+        new Chart(document.getElementById('topLosersChart'), {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.Stock),
+                datasets: [{
+                    label: 'Loss',
+                    data: data.map(d => d.Loss),
+                    backgroundColor: 'red',
+                }]
+            }
+        });
+    }
+</script>
