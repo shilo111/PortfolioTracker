@@ -145,7 +145,12 @@
                                 <td class="pl-percentage" data-value="@item.ProfitLossPercentage">
                                     @item.ProfitLossPercentage.ToString("0.00") %
                                 </td>
-                               
+                                <td>
+                                    <form action="/Portfolio/DeleteStock" method="post">
+                                        <input type="hidden" name="stock" value="@item.Stock" />
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -270,6 +275,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 
     // יצירת Dropdown לבחירת שנה
+    const marketReturns = @Html.Raw(Json.Encode(ViewBag.MarketReturns));
 
     // יצירת גרף קו
    // גרף קו - תשואות לאורך זמן
@@ -283,13 +289,16 @@ const lineChart = new Chart(ctxLine, {
                 label: 'My Returns (%)',
                 data: @Html.Raw(Json.Encode(ViewBag.MonthlyReturns)), // תשואות התיק
                 borderColor: '#36A2EB',
-                fill: false
+                fill: false ,
+                tension: 0.4 
             },
-            {
+             {
                 label: 'Market Returns (%)',
-                data: @Html.Raw(Json.Encode(ViewBag.MarketReturns)), // תשואות השוק
+                data: marketReturns,
                 borderColor: '#FF6384',
-                fill: false
+                 fill: false ,
+                 tension: 0.4 
+
             }
         ]
     },
