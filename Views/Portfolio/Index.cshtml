@@ -62,15 +62,57 @@
             font-weight: bold;
             color: #333;
         }
+        #addStockButton,
+        .year-selector select {
+            padding: 10px 16px;
+            font-size: 16px;
+            border: 1px solid #28a745;
+            border-radius: 5px;
+            height: 42px;
+            line-height: 1;
+            display: inline-block;
+            vertical-align: middle;
+            background-color: #ffffff; /* רקע לבן עבור ה-dropdown */
+            color: #333; /* צבע טקסט */
+            box-shadow: none;
+        }
+
+        #addStockButton {
+            background-color: #28a745; /* רקע ירוק לכפתור */
+            color: #ffffff; /* טקסט לבן */
+        }
+
+        .year-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* רווח בין הכפתור ל-dropdown */
+        }
+
+
     </style>
+
+    
 
 </head>
 
 <body>
+    
     <!-- כפתור הוספת מניה -->
-    <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addStockModal">
-        הוסף מניה
-    </button>
+    <div class="year-selector">
+        <button id="addStockButton" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addStockModal">
+            הוסף מניה
+        </button>
+        <form method="get" action="/Portfolio/Index" style="margin: 0;">
+            <select name="selectedYear" id="selectedYear" class="form-select" onchange="this.form.submit()">
+                <option value="">All Years - Graph📈</option>
+                @foreach (var year in ViewBag.Years)
+                {
+                    <option value="@year" @(year == ViewBag.SelectedYear ? "selected" : "")>@year</option>
+                }
+            </select>
+        </form>
+
+    </div>
 
     <div class="container mt-5">
         <h1 class="text-center mb-4">Trading</h1>
@@ -78,7 +120,7 @@
         <div class="layout-container">
             <!-- טבלה -->
             <div class="table-container">
-                <h3 class="text-center">Portfoilio</h3>
+                <h3 class="text-center">Portfoilio -  Live and Active</h3>
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -87,7 +129,7 @@
                             <th>P/L Day (%)</th>
                             <th>P/L ($)</th>
                             <th>P/L (%)</th>
-                            <th>Actions</th>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -103,12 +145,7 @@
                                 <td class="pl-percentage" data-value="@item.ProfitLossPercentage">
                                     @item.ProfitLossPercentage.ToString("0.00") %
                                 </td>
-                                <td>
-                                    <form action="/Portfolio/DeleteStock" method="post">
-                                        <input type="hidden" name="stock" value="@item.Stock" />
-                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                    </form>
-                                </td>
+                               
                             </tr>
                         }
                     </tbody>
@@ -119,7 +156,7 @@
             <div class="graph-container">
                 <!-- גרף עוגה -->
                 <div class="graph-item">
-                    <h3>פיזור תיק ההשקעות</h3>
+                    <h3>פיזור תיק ההשקעות - פעיל</h3>
                     <canvas id="portfolioPieChart"></canvas>
                     <div class="active-portfolio-size mt-3">
 
@@ -128,15 +165,13 @@
                 </div>
 
 
-                <div class="chart-container">
-                    <h2 class="text-center">השוואה באחוזים מול S&P 500</h2>
-                    <canvas id="barChart"></canvas>
-                </div>
+
 
                 <div class="chart-container">
-                    <h2 class="text-center">תשואה לאורך זמן</h2>
+                    <h2 class="text-center">תשואה לאורך זמן - התיק מול השוק</h2>
                     <canvas id="lineChart"></canvas>
                 </div>
+
             </div>
         </div>
     </div>
@@ -191,7 +226,7 @@
 
 <!-- סקריפט לגרפים -->
 <script>
- document.addEventListener("DOMContentLoaded", async function () {
+document.addEventListener("DOMContentLoaded", async function () {
     // פונקציה לצביעת תאי P/L
     document.querySelectorAll(".pl-value, .pl-percentage").forEach(cell => {
         const value = parseFloat(cell.getAttribute("data-value"));
@@ -200,41 +235,10 @@
         }
     });
 
-    // פונקציה לשליפת נתוני תשואות S&P 500
-    async function fetchSP500Returns() {
-        try {
-            const response = await fetch('/Portfolio/GetSP500Returns');
-            const sp500Returns = await response.json();
-
-            if (sp500Returns.error) {
-                console.error("Error fetching S&P 500 data:", sp500Returns.error);
-                return Array(12).fill(0); // במקרה של שגיאה, מחזירים מערך של אפסים
-            }
-
-            return sp500Returns;
-        } catch (error) {
-            console.error("Failed to fetch S&P 500 data:", error);
-            return Array(12).fill(0); // במקרה של שגיאה, מחזירים מערך של אפסים
-        }
-    }
-
-    // חישוב גודל תיק פעיל
-    const activePortfolioSize = @Html.Raw(Json.Encode(Model.Sum(item => item.Price * (decimal)item.Quantity)));
-    const activePortfolioElement = document.createElement("div");
-    activePortfolioElement.id = "activePortfolioSize";
-    activePortfolioElement.style.textAlign = "center";
-    activePortfolioElement.style.marginTop = "10px";
-    activePortfolioElement.style.fontSize = "18px";
-    activePortfolioElement.style.fontWeight = "bold";
-    activePortfolioElement.textContent = `גודל תיק פעיל: $${activePortfolioSize.toFixed(2)}`;
-    document.querySelector("#portfolioPieChart").parentNode.insertBefore(activePortfolioElement, document.querySelector("#portfolioPieChart"));
-
     // נתוני הגרפים
     const labelsBar = @Html.Raw(Json.Encode(ViewBag.Months)); // חודשים
     const myReturnsBar = @Html.Raw(Json.Encode(ViewBag.MonthlyReturns)); // תשואות חודשיות שלי
-
-    // שליפת נתוני S&P 500
-    const sp500ReturnsBar = await fetchSP500Returns();
+    const allYears = @Html.Raw(Json.Encode(ViewBag.Years)); // רשימת שנים
 
     // יצירת גרף עוגה
     const labelsPie = @Html.Raw(Json.Encode(Model.Select(p => p.Stock))); // שמות המניות
@@ -265,76 +269,57 @@
         plugins: [ChartDataLabels]
     });
 
-    // יצירת גרף עמודות
-    const ctxBar = document.getElementById('barChart').getContext('2d');
-    new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: labelsBar,
-            datasets: [
-                {
-                    label: 'My Returns (%)',
-                    data: myReturnsBar,
-                    backgroundColor: '#36A2EB',
-                },
-                {
-                    label: 'S&P 500 Returns (%)',
-                    data: sp500ReturnsBar,
-                    backgroundColor: '#FF6384',
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'top' },
-                tooltip: {
-                    callbacks: {
-                        label: function (tooltipItem) {
-                            return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(2)}%`;
-                        }
-                    }
-                }
-            }
-        }
-    });
+    // יצירת Dropdown לבחירת שנה
 
     // יצירת גרף קו
-    const ctxLine = document.getElementById('lineChart').getContext('2d');
-    new Chart(ctxLine, {
-        type: 'line',
-        data: {
-            labels: labelsBar,
-            datasets: [
-                {
-                    label: 'My Returns (%)',
-                    data: myReturnsBar,
-                    borderColor: '#36A2EB',
-                    fill: false
-                },
-                {
-                    label: 'S&P 500 Returns (%)',
-                    data: sp500ReturnsBar,
-                    borderColor: '#FF6384',
-                    fill: false
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'top' },
-                tooltip: {
-                    callbacks: {
-                        label: function (tooltipItem) {
-                            return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(2)}%`;
-                        }
+   // גרף קו - תשואות לאורך זמן
+const ctxLine = document.getElementById('lineChart').getContext('2d');
+const lineChart = new Chart(ctxLine, {
+    type: 'line',
+    data: {
+        labels: @Html.Raw(Json.Encode(ViewBag.Months)), // חודשים של התיק
+        datasets: [
+            {
+                label: 'My Returns (%)',
+                data: @Html.Raw(Json.Encode(ViewBag.MonthlyReturns)), // תשואות התיק
+                borderColor: '#36A2EB',
+                fill: false
+            },
+            {
+                label: 'Market Returns (%)',
+                data: @Html.Raw(Json.Encode(ViewBag.MarketReturns)), // תשואות השוק
+                borderColor: '#FF6384',
+                fill: false
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+                callbacks: {
+                    label: function (tooltipItem) {
+                        return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(2)}%`;
                     }
                 }
             }
         }
-    });
+    }
 });
 
-</script>
 
+    // עדכון גרף לפי השנה הנבחרת
+    yearDropdown.addEventListener("change", function () {
+        const selectedYear = this.value;
+        fetch(`/Portfolio/GetYearlyData?year=${selectedYear}`)
+            .then(response => response.json())
+            .then(data => {
+                lineChart.data.labels = data.months; // חודשים של השנה
+                lineChart.data.datasets[0].data = data.returns; // תשואות של השנה
+                lineChart.update();
+            })
+            .catch(error => console.error("Failed to fetch yearly data:", error));
+    });
+});
+</script>
