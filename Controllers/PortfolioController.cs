@@ -57,6 +57,7 @@ namespace PortfolioTracker.Controllers
             ViewBag.Months = groupedData.Select(g => g.Date.ToString("MM/yyyy")).ToList(); // פורמט: חודש/שנה
             ViewBag.MonthlyReturns = groupedData.Select(g => g.MonthlyReturn).ToList();
 
+
             // העברת המידע ל-View
             return View(activePortfolio);
         }
@@ -302,13 +303,16 @@ namespace PortfolioTracker.Controllers
         }
         [HttpGet]
 
-        public async Task<JsonResult> GetSP500Returns()
+       
+        public async Task<JsonResult> GetSP500MonthlyReturns()
         {
             try
             {
-                string apiKey = "cuav1s1r01qof06jg10gcuav1s1r01qof06jg110"; // החלף במפתח ה-API שלך
-                string symbol = "^GSPC"; // סמל של S&P 500
-                string apiUrl = $"https://finnhub.io/api/v1/stock/candle?symbol={symbol}&resolution=M&from={GetUnixTime(DateTime.Now.AddYears(-1))}&to={GetUnixTime(DateTime.Now)}&token={apiKey}";
+                string apiKey = "cuav1s1r01qof06jg10gcuav1s1r01qof06jg110"; // שים כאן את ה-API KEY שלך
+                string symbol = "^GSPC"; // סמל המדד S&P 500
+                long fromDate = GetUnixTime(DateTime.Now.AddYears(-1)); // 12 חודשים אחורה
+                long toDate = GetUnixTime(DateTime.Now); // עד היום
+                string apiUrl = $"https://finnhub.io/api/v1/stock/candle?symbol={symbol}&resolution=M&from={fromDate}&to={toDate}&token={apiKey}";
 
                 using (var client = new HttpClient())
                 {
@@ -320,17 +324,22 @@ namespace PortfolioTracker.Controllers
                         return Json(new { error = "No data found for S&P 500" }, JsonRequestBehavior.AllowGet);
                     }
 
-                    // שליפת מחירי הסגירה וחישוב תשואות חודשיות
-                    var returns = new List<decimal>();
                     var closingPrices = ((IEnumerable<dynamic>)data["c"]).Select(price => (decimal)price).ToList();
 
+                    // חישוב תשואות חודשיות
+                    var returns = new List<decimal>();
                     for (int i = 1; i < closingPrices.Count; i++)
                     {
-                        var monthlyReturn = ((closingPrices[i] - closingPrices[i - 1]) / closingPrices[i - 1]) * 100;
+                        decimal monthlyReturn = ((closingPrices[i] - closingPrices[i - 1]) / closingPrices[i - 1]) * 100;
                         returns.Add(monthlyReturn);
                     }
 
-                    return Json(returns, JsonRequestBehavior.AllowGet);
+                    // יצירת רשימת חודשים
+                    var months = Enumerable.Range(0, returns.Count)
+                        .Select(i => DateTime.Now.AddMonths(-1 * (returns.Count - 1 - i)).ToString("MMMM yyyy"))
+                        .ToList();
+
+                    return Json(new { months, returns }, JsonRequestBehavior.AllowGet);
                 }
             }
             catch (Exception ex)
@@ -339,8 +348,6 @@ namespace PortfolioTracker.Controllers
             }
         }
 
-
-        // פונקציה להמרת תאריך ל-UNIX timestamp
         private long GetUnixTime(DateTime date)
         {
             return ((DateTimeOffset)date).ToUnixTimeSeconds();
