@@ -7,6 +7,7 @@ namespace PortfolioTracker.Models
 {
     public class PortfolioItem
     {
+        public int ID { get; set; } // מזהה ייחודי
         public string Stock { get; set; }
         public double Quantity { get; set; }
         public decimal Price { get; set; }
@@ -16,6 +17,8 @@ namespace PortfolioTracker.Models
         public decimal ProfitLoss { get; set; }
         public decimal ProfitLossPercentage { get; set; } // אחוזי רווח/הפסד
         public DateTime DateAdded { get; set; }
+        public bool IsDeleted { get; set; }
+        public bool IsActive { get; set; }
     }
     public class MonthlyTransactionsViewModel
     {
@@ -28,5 +31,6 @@ namespace PortfolioTracker.Models
         public decimal TotalProfit { get; set; } // סך הרווחים לשנה
         public List<MonthlyTransactionsViewModel> Transactions { get; set; } // רשימת עסקאות לפי חודשים
     }
+
 
 }
