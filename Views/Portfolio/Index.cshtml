@@ -88,6 +88,19 @@
             gap: 10px; /* רווח בין הכפתור ל-dropdown */
         }
 
+        .chart-container {
+            width: 100%; /* תפס את כל הרוחב */
+            max-width: 1000px; /* הגבל את הרוחב המקסימלי (אפשר להגדיל עוד) */
+            margin: 30px auto; /* מרכז את הגרף */
+            height: 359px; /* הגדל את הגובה של הגרפים */
+        }
+
+        h2 {
+            text-align: center; /* יישור כותרות למרכז */
+            margin-bottom: 20px; /* רווח מתחת לכותרת */
+            font-size: 24px; /* גודל פונט מוגדל */
+        }
+
 
     </style>
 
@@ -116,7 +129,7 @@
     <div style="text-align: left;">
         <h4>Absolute Success Rate: @ViewBag.AbsoluteSuccessRate.ToString("0.00") %</h4>
         <h4>Relative Success Rate (vs. SPX): @ViewBag.RelativeSuccessRate %</h4>
-        <h4>Total Market Performance: @ViewBag.TotalMarketPerformance.ToString("0.00") %</h4>
+     @*   <h4>Total Market Performance: @ViewBag.TotalMarketPerformance.ToString("0.00") %</h4>*@
     </div>
 
 
@@ -178,11 +191,20 @@
 
 
 
-                <div class="chart-container">
+                <div class="chart-container" >
                     <h2 class="text-center">תשואה לאורך זמן - התיק מול השוק</h2>
                     <canvas id="lineChart"></canvas>
                 </div>
 
+            </div>
+            <div class="graph-container">
+                <div class="chart-container">
+                    <h2>Top 10 Earning Stocks</h2>
+                    <canvas id="topEarningChart"></canvas>
+
+                    <h2>Bottom 10 Losing Stocks</h2>
+                    <canvas id="bottomLosingChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -238,7 +260,7 @@
 <!-- סקריפט לגרפים -->
 <script>
 document.addEventListener("DOMContentLoaded", async function () {
-    // פונקציה לצביעת תאי P/L
+    // 1. Coloring P/L Cells
     document.querySelectorAll(".pl-value, .pl-percentage").forEach(cell => {
         const value = parseFloat(cell.getAttribute("data-value"));
         if (!isNaN(value)) {
@@ -246,22 +268,18 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     });
 
-    // נתוני הגרפים
-    const labelsBar = @Html.Raw(Json.Encode(ViewBag.Months)); // חודשים
-    const myReturnsBar = @Html.Raw(Json.Encode(ViewBag.MonthlyReturns)); // תשואות חודשיות שלי
-    const allYears = @Html.Raw(Json.Encode(ViewBag.Years)); // רשימת שנים
+    // 2. Pie Chart Data
+    const labelsPie = @Html.Raw(Json.Encode(Model.Select(p => p.Stock))); // Stock names
+    const dataPie = @Html.Raw(Json.Encode(Model.Select(p => p.Investment))); // Investments
+    const totalInvestmentPie = dataPie.reduce((sum, value) => sum + value, 0); // Total investment
 
-    // יצירת גרף עוגה
-    const labelsPie = @Html.Raw(Json.Encode(Model.Select(p => p.Stock))); // שמות המניות
-    const dataPie = @Html.Raw(Json.Encode(Model.Select(p => p.Investment))); // השקעות
-    const totalInvestmentPie = dataPie.reduce((sum, value) => sum + value, 0); // סך הכל השקעות
     const ctxPie = document.getElementById('portfolioPieChart').getContext('2d');
     new Chart(ctxPie, {
         type: 'pie',
         data: {
             labels: labelsPie,
             datasets: [{
-                data: dataPie.map(value => ((value / totalInvestmentPie) * 100).toFixed(2)), // חישוב אחוזים
+                data: dataPie.map(value => ((value / totalInvestmentPie) * 100).toFixed(2)), // Percentages
                 backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'],
                 hoverOffset: 4
             }]
@@ -280,61 +298,109 @@ document.addEventListener("DOMContentLoaded", async function () {
         plugins: [ChartDataLabels]
     });
 
-    // יצירת Dropdown לבחירת שנה
-    const marketReturns = @Html.Raw(Json.Encode(ViewBag.MarketReturns));
+    // 3. Line Chart Data
+    const labelsBar = @Html.Raw(Json.Encode(ViewBag.Months)); // Months
+    const myReturnsBar = @Html.Raw(Json.Encode(ViewBag.MonthlyReturns)); // Monthly returns
+    const marketReturns = @Html.Raw(Json.Encode(ViewBag.MarketReturns)); // Market returns
 
-    // יצירת גרף קו
-   // גרף קו - תשואות לאורך זמן
-const ctxLine = document.getElementById('lineChart').getContext('2d');
-const lineChart = new Chart(ctxLine, {
-    type: 'line',
-    data: {
-        labels: @Html.Raw(Json.Encode(ViewBag.Months)), // חודשים של התיק
-        datasets: [
-            {
-                label: 'My Returns (%)',
-                data: @Html.Raw(Json.Encode(ViewBag.MonthlyReturns)), // תשואות התיק
-                borderColor: '#36A2EB',
-                fill: false ,
-                tension: 0.4 
-            },
-             {
-                label: 'Market Returns (%)',
-                data: marketReturns,
-                borderColor: '#FF6384',
-                 fill: false ,
-                 tension: 0.4 
-
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { position: 'top' },
-            tooltip: {
-                callbacks: {
-                    label: function (tooltipItem) {
-                        return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(2)}%`;
+    const ctxLine = document.getElementById('lineChart').getContext('2d');
+    const lineChart = new Chart(ctxLine, {
+        type: 'line',
+        data: {
+            labels: labelsBar,
+            datasets: [
+                {
+                    label: 'My Returns (%)',
+                    data: myReturnsBar,
+                    borderColor: '#36A2EB',
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'Market Returns (%)',
+                    data: marketReturns,
+                    borderColor: '#FF6384',
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: function (tooltipItem) {
+                            return `${tooltipItem.dataset.label}: ${tooltipItem.raw.toFixed(2)}%`;
+                        }
                     }
                 }
             }
         }
-    }
-});
+    });
 
-
-    // עדכון גרף לפי השנה הנבחרת
+    // 4. Update Line Chart Based on Year Dropdown
+    const yearDropdown = document.getElementById("selectedYear");
     yearDropdown.addEventListener("change", function () {
         const selectedYear = this.value;
         fetch(`/Portfolio/GetYearlyData?year=${selectedYear}`)
             .then(response => response.json())
             .then(data => {
-                lineChart.data.labels = data.months; // חודשים של השנה
-                lineChart.data.datasets[0].data = data.returns; // תשואות של השנה
+                lineChart.data.labels = data.months; // Update months
+                lineChart.data.datasets[0].data = data.returns; // Update returns
                 lineChart.update();
             })
             .catch(error => console.error("Failed to fetch yearly data:", error));
+    });
+
+   const topEarningChart = document.getElementById('topEarningChart');
+    new Chart(topEarningChart, {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(Json.Encode(ViewBag.TopEarningStockNames)),
+            datasets: [{
+                label: 'Profit ($)',
+                data: @Html.Raw(Json.Encode(ViewBag.TopEarningStockProfits)),
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Bottom Losing Stocks Chart
+    const bottomLosingChart = document.getElementById('bottomLosingChart');
+    new Chart(bottomLosingChart, {
+        type: 'bar',
+        data: {
+            labels: @Html.Raw(Json.Encode(ViewBag.BottomLosingStockNames)),
+            datasets: [{
+                label: 'Loss ($)',
+                data: @Html.Raw(Json.Encode(ViewBag.BottomLosingStockLosses)),
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
     });
 });
 </script>

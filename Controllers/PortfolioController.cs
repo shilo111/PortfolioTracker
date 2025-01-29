@@ -23,58 +23,78 @@ namespace PortfolioTracker.Controllers
         // GET: Portfolio
         public ActionResult Index(int? selectedYear)
         {
-            // סינון מניות פעילות בלבד
+            // Step 1: Filter active portfolio items
             var activePortfolio = portfolio.Where(p => p.IsActive).ToList();
 
-            // חישוב נתונים עבור המניות הפעילות
+            // Step 2: Calculate total investment and portfolio returns
             decimal totalInvestment = activePortfolio.Sum(p => p.Investment);
             decimal portfolioReturns = activePortfolio.Sum(p => p.ProfitLoss);
-            decimal myReturnsPercentage = totalInvestment == 0 ? 0 : (portfolioReturns / totalInvestment) * 100;
 
-            foreach (var item in activePortfolio)
-            {
-                item.ProfitLossPercentage = item.Investment == 0 ? 0 : (item.ProfitLoss / item.Investment) * 100;
-            }
+            
 
-            // קיבוץ נתונים לפי חודשים ושנים
-            var groupedData = portfolioHistory
-                .Where(p => !selectedYear.HasValue || p.DateAdded.Year == selectedYear.Value) // סינון לפי שנה
-                .OrderBy(p => p.DateAdded) // מיון עולה לפי תאריך
-                .GroupBy(p => new { p.DateAdded.Year, p.DateAdded.Month }) // קיבוץ לפי שנה וחודש
-                .Select(g => new
-                {
-                    Date = new DateTime(g.Key.Year, g.Key.Month, 1), // יצירת תאריך מהשנה והחודש
-                    MonthlyReturn = g.Sum(p => p.ProfitLoss) / (g.Sum(p => p.Investment) == 0 ? 1 : g.Sum(p => p.Investment)) * 100
-                })
-                .OrderBy(g => g.Date) // מיון נוסף לפי התאריך
+            // Top 10 Earning Stocks (sorted correctly)
+            var topEarningStocks = activePortfolio
+                .Where(p => p.ProfitLoss > 0) // Only profitable stocks
+                .OrderByDescending(p => p.ProfitLoss)
+                .Take(10)
                 .ToList();
 
-            // רשימת השנים לבחירה ב-Dropdown
+            // Bottom 10 Losing Stocks (excluding profitable stocks)
+            var bottomLosingStocks = activePortfolio
+                .Where(p => p.ProfitLoss < 0) // Only losing stocks
+                .OrderBy(p => p.ProfitLoss)
+                .Take(10)
+                .ToList();
+            ViewBag.TopEarningStockNames = topEarningStocks.Select(s => s.Stock).ToList();
+            ViewBag.TopEarningStockProfits = topEarningStocks.Select(s => s.ProfitLoss).ToList();
+
+            ViewBag.BottomLosingStockNames = bottomLosingStocks.Select(s => s.Stock).ToList();
+            ViewBag.BottomLosingStockLosses = bottomLosingStocks.Select(s => Math.Abs(s.ProfitLoss)).ToList();
+
+
+            // Other existing logic remains unchanged
             ViewBag.Years = portfolioHistory.Select(p => p.DateAdded.Year).Distinct().OrderByDescending(y => y).ToList();
             ViewBag.SelectedYear = selectedYear;
 
+            // Step 5: Group data by months and years (for line chart)
+            var groupedData = portfolioHistory
+                .Where(p => !selectedYear.HasValue || p.DateAdded.Year == selectedYear.Value) // Filter by year if selected
+                .OrderBy(p => p.DateAdded) // Sort by date
+                .GroupBy(p => new { p.DateAdded.Year, p.DateAdded.Month }) // Group by year and month
+                .Select(g => new
+                {
+                    Date = new DateTime(g.Key.Year, g.Key.Month, 1), // Create a date object
+                    MonthlyReturn = g.Sum(p => p.ProfitLoss) / (g.Sum(p => p.Investment) == 0 ? 1 : g.Sum(p => p.Investment)) * 100
+                })
+                .OrderBy(g => g.Date) // Sort by date again
+                .ToList();
 
-            // הכנת נתונים ל-ViewBag
-            ViewBag.Months = groupedData.Select(g => g.Date.ToString("MM/yyyy")).ToList(); // פורמט: חודש/שנה
+            // Step 6: Prepare data for dropdown and charts
+            ViewBag.Years = portfolioHistory.Select(p => p.DateAdded.Year).Distinct().OrderByDescending(y => y).ToList();
+            ViewBag.SelectedYear = selectedYear;
+
+            ViewBag.Months = groupedData.Select(g => g.Date.ToString("MM/yyyy")).ToList(); // Format: MM/yyyy
             ViewBag.MonthlyReturns = groupedData.Select(g => g.MonthlyReturn).ToList();
 
-            // חישוב אחוזי הצלחה אבסולוטיים
-            int totalTrades = portfolioHistory.Count; // סך העסקאות
-            int successfulTrades = portfolioHistory.Count(p => p.ProfitLoss > 0); // עסקאות רווחיות
+            // Step 7: Calculate absolute success rate
+            int totalTrades = portfolioHistory.Count; // Total trades
+            int successfulTrades = portfolioHistory.Count(p => p.ProfitLoss > 0); // Profitable trades
             decimal absoluteSuccessRate = totalTrades > 0 ? (decimal)successfulTrades / totalTrades * 100 : 0;
 
-            // הצגת אחוזי ההצלחה ב-ViewBag
             ViewBag.AbsoluteSuccessRate = absoluteSuccessRate;
+
+            // Step 8: Pass market returns data
             ViewBag.MarketReturns = marketReturns
                 .OrderBy(r => r.Year)
                 .ThenBy(r => r.Month)
                 .Select(r => r.ReturnPercentage)
                 .ToList();
 
+            // Step 9: Pass Top 10 Earning Stocks and Bottom 10 Losing Stocks to the view
+            ViewBag.TopEarningStocks = topEarningStocks;
+            ViewBag.BottomLosingStocks = bottomLosingStocks;
 
-
-
-            // העברת המידע ל-View
+            // Return the active portfolio to the view
             return View(activePortfolio);
         }
 
