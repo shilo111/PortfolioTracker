@@ -13,6 +13,7 @@ namespace PortfolioTracker.Controllers
     {
         // רשימת הפוזיציות הפעילות
         private static List<PortfolioItem> portfolio = new List<PortfolioItem>();
+        private static List<MarketReturn> marketReturns = new List<MarketReturn>();
 
         // רשימת היסטוריה
         private static List<PortfolioItem> historyPortfolio = new List<PortfolioItem>();
@@ -57,10 +58,69 @@ namespace PortfolioTracker.Controllers
             ViewBag.Months = groupedData.Select(g => g.Date.ToString("MM/yyyy")).ToList(); // פורמט: חודש/שנה
             ViewBag.MonthlyReturns = groupedData.Select(g => g.MonthlyReturn).ToList();
 
+            // חישוב אחוזי הצלחה אבסולוטיים
+            int totalTrades = portfolioHistory.Count; // סך העסקאות
+            int successfulTrades = portfolioHistory.Count(p => p.ProfitLoss > 0); // עסקאות רווחיות
+            decimal absoluteSuccessRate = totalTrades > 0 ? (decimal)successfulTrades / totalTrades * 100 : 0;
+
+            // הצגת אחוזי ההצלחה ב-ViewBag
+            ViewBag.AbsoluteSuccessRate = absoluteSuccessRate;
+            ViewBag.MarketReturns = marketReturns
+                .OrderBy(r => r.Year)
+                .ThenBy(r => r.Month)
+                .Select(r => r.ReturnPercentage)
+                .ToList();
+
+
+
 
             // העברת המידע ל-View
             return View(activePortfolio);
         }
+
+        public decimal CalculateTotalMarketPerformance(List<decimal> marketReturns)
+{
+    if (marketReturns == null || !marketReturns.Any())
+    {
+        return 0; // אם אין נתונים, מחזירים 0
+    }
+
+    decimal totalPerformance = 1; // מתחילים מ-1 כדי לייצג את הערך ההתחלתי (100%)
+    
+    foreach (var monthlyReturn in marketReturns)
+    {
+        totalPerformance *= (1 + (monthlyReturn / 100)); // מוסיפים את התשואה של כל חודש ומכפילים
+    }
+
+    totalPerformance = (totalPerformance - 1) * 100; // מורידים 1 ומחזירים אחוזים
+    return totalPerformance;
+}
+
+
+
+        [HttpPost]
+        public ActionResult AddMarketReturn(int month, int year, decimal returnPercentage)
+        {
+            // בדיקה אם הערך כבר קיים ברשימת תשואות המדד
+            var existingReturn = marketReturns.FirstOrDefault(r => r.Month == month && r.Year == year);
+            if (existingReturn != null)
+            {
+                existingReturn.ReturnPercentage = returnPercentage; // עדכון תשואה קיימת
+            }
+            else
+            {
+                marketReturns.Add(new MarketReturn
+                {
+                    Month = month,
+                    Year = year,
+                    ReturnPercentage = returnPercentage
+                });
+            }
+
+            // חזרה לדף הראשי
+            return RedirectToAction("Index");
+        }
+
 
 
 
@@ -82,6 +142,9 @@ namespace PortfolioTracker.Controllers
 
             return Json(new { months, returns }, JsonRequestBehavior.AllowGet);
         }
+
+
+    
 
 
 

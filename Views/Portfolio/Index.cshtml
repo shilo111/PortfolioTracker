@@ -96,7 +96,7 @@
 </head>
 
 <body>
-    
+
     <!-- כפתור הוספת מניה -->
     <div class="year-selector">
         <button id="addStockButton" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addStockModal">
@@ -113,6 +113,12 @@
         </form>
 
     </div>
+    <div style="text-align: left;">
+        <h4>Absolute Success Rate: @ViewBag.AbsoluteSuccessRate.ToString("0.00") %</h4>
+        <h4>Relative Success Rate (vs. SPX): @ViewBag.RelativeSuccessRate %</h4>
+        <h4>Total Market Performance: @ViewBag.TotalMarketPerformance.ToString("0.00") %</h4>
+    </div>
+
 
     <div class="container mt-5">
         <h1 class="text-center mb-4">Trading</h1>

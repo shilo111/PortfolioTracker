@@ -32,5 +32,14 @@ namespace PortfolioTracker.Models
         public List<MonthlyTransactionsViewModel> Transactions { get; set; } // רשימת עסקאות לפי חודשים
     }
 
+    public class MarketReturn
+    {
+        public int Month { get; set; }
+        public int Year { get; set; }
+        public decimal ReturnPercentage { get; set; }
+    }
+
+
+
 
 }

@@ -26,9 +26,49 @@
                         <a class="nav-link" href="@Url.Action("Alerts", "Portfolio")">Alerts</a>
                     </li>
 
+                    <button style="color:white; background-color:black; border-color:black" id="addMarketReturnButton" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMarketReturnModal">
+                        Add Market Return
+                    </button>
+
+
                 </ul>
             </div>
         </div>
+        <!-- טופס להוספת תשואת המדד -->
+        <!-- טופס להוספת תשואת המדד -->
+        <div class="modal fade" id="addMarketReturnModal" tabindex="-1" aria-labelledby="addMarketReturnModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addMarketReturnModalLabel">Add Market Return</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addMarketReturnForm" action="/Portfolio/AddMarketReturn" method="post">
+                            <div class="mb-3">
+                                <label for="month" class="form-label">Month:</label>
+                                <select id="month" name="month" class="form-control" required>
+                                    @for (int i = 1; i <= 12; i++)
+                                    {
+                                        <option value="@i">@i</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="year" class="form-label">Year:</label>
+                                <input type="number" id="year" name="year" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="returnPercentage" class="form-label">Return (%):</label>
+                                <input type="number" id="returnPercentage" name="returnPercentage" class="form-control" step="0.01" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </nav>
     <div class="container mt-4">
         @RenderBody()
