@@ -136,59 +136,7 @@
             overflow-y: auto;
         }
 
-        .content {
-            display: none;
-        }
-
-            .content.active {
-                display: block;
-            }
-        /* תפריט צד */
-        .sidebar {
-            width: 180px;
-            height: calc(100vh - 60px);
-            position: fixed;
-            top: 60px;
-            left: 0;
-            background-color: #f5f5f5;
-            border-right: 1px solid #ddd;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 20px;
-            overflow-y: auto;
-            z-index: 1000;
-        }
-
-            .sidebar a {
-                padding: 10px 15px;
-                text-align: center;
-                text-decoration: none;
-                color: #333;
-                font-size: 14px;
-                margin: 5px 0;
-                border-radius: 5px;
-                width: 90%;
-            }
-
-                .sidebar a:hover, .sidebar a.active {
-                    background-color: #007bff;
-                    color: white;
-                }
-
-        /* תוכן */
-        .content {
-            margin-left: 200px;
-            padding: 20px;
-        }
-
-        .page {
-            display: none; /* הסתר את כל התוכן */
-        }
-
-            .page.active {
-                display: block; /* הצג רק את הדף הפעיל */
-            }
+   
 
     </style>
 
@@ -219,12 +167,7 @@
         <h4>Relative Success Rate (vs. SPX): @ViewBag.RelativeSuccessRate %</h4>
         @*   <h4>Total Market Performance: @ViewBag.TotalMarketPerformance.ToString("0.00") %</h4>*@
     </div>
-   <div class="sidebar">
-    <!-- קישורים לתוכן -->
-    <a href="#" class="menu-item active" data-page="top-earning">Top 10 Earning Stocks</a>
-    <a href="#" class="menu-item" data-page="bottom-losing">Bottom 10 Losing Stocks</a>
-    <a href="#" class="menu-item" data-page="table">Portfolio Table</a>
-</div>
+   
 
     <div id="table" class="page">
     
@@ -294,20 +237,20 @@
 
         </div>
     </div>
-    <div class="content">
+    <!--<div class="content">-->
         <!-- עמוד ראשון: גרף Top Earning -->
-        <div id="top-earning" class="page active">
+        <!--<div id="top-earning" class="page active">
             <h2>Top 10 Earning Stocks</h2>
             <canvas id="topEarningChart"></canvas>
-        </div>
+        </div>-->
 
         <!-- עמוד שני: גרף Bottom Losing -->
-        <div id="bottom-losing" class="page">
+        <!--<div id="bottom-losing" class="page">
             <h2>Bottom 10 Losing Stocks</h2>
             <canvas id="bottomLosingChart"></canvas>
         </div>
 
-    </div>
+    </div>-->
 </body>
 
 <!-- Modal להוספת מניה -->

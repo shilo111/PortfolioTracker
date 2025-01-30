@@ -142,7 +142,10 @@ namespace PortfolioTracker.Controllers
         }
 
 
-
+        public ActionResult Graphs()
+        {
+            return View();
+        }
 
         [HttpGet]
         public JsonResult GetYearlyData(int year)

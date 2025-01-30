@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    <link rel="stylesheet" href="~/Content/site.css" />
+</head>
+<body>
+    <!-- תפריט ראשי -->
+    <div class="main-header">
+        <h1>ניהול תיק השקעות</h1>
+    </div>
+
+    <!-- תפריט צדדי -->
+    <div class="sidebar">
+        <a href="@Url.Action("Index", "Portfolio")" class="@(ViewBag.ActivePage == "Index" ? "active" : "")">🏠 דף הבית</a>
+        <a href="@Url.Action("TopEarning", "Portfolio")" class="@(ViewBag.ActivePage == "TopEarning" ? "active" : "")">📈 המניות הכי מרוויחות</a>
+        <a href="@Url.Action("BottomLosing", "Portfolio")" class="@(ViewBag.ActivePage == "BottomLosing" ? "active" : "")">📉 המניות הכי מפסידות</a>
+        <a href="@Url.Action("PortfolioTable", "Portfolio")" class="@(ViewBag.ActivePage == "PortfolioTable" ? "active" : "")">📊 טבלת נתונים</a>
+    </div>
+
+    <!-- תוכן משתנה -->
+    <div class="content">
+        @RenderBody()
+    </div>
+
+</body>
+</html>
