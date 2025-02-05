@@ -19,6 +19,9 @@ namespace PortfolioTracker.Models
         public DateTime DateAdded { get; set; }
         public bool IsDeleted { get; set; }
         public bool IsActive { get; set; }
+        public double Sold { get; set; }
+        public double FirstQuantity { get; set; }
+
     }
     public class MonthlyTransactionsViewModel
     {

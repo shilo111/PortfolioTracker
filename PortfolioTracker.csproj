@@ -159,6 +159,18 @@
     <Compile Include="Migrations\202502042128238_InitialCreate.Designer.cs">
       <DependentUpon>202502042128238_InitialCreate.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202502051239170_pp.cs" />
+    <Compile Include="Migrations\202502051239170_pp.Designer.cs">
+      <DependentUpon>202502051239170_pp.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202502051304431_AddSoldColumn.cs" />
+    <Compile Include="Migrations\202502051304431_AddSoldColumn.Designer.cs">
+      <DependentUpon>202502051304431_AddSoldColumn.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202502051331037_AddFirstQuantityColumn.cs" />
+    <Compile Include="Migrations\202502051331037_AddFirstQuantityColumn.Designer.cs">
+      <DependentUpon>202502051331037_AddFirstQuantityColumn.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\PortfolioItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -244,6 +256,15 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202502042128238_InitialCreate.resx">
       <DependentUpon>202502042128238_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202502051239170_pp.resx">
+      <DependentUpon>202502051239170_pp.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202502051304431_AddSoldColumn.resx">
+      <DependentUpon>202502051304431_AddSoldColumn.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202502051331037_AddFirstQuantityColumn.resx">
+      <DependentUpon>202502051331037_AddFirstQuantityColumn.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

@@ -62,6 +62,7 @@
             font-weight: bold;
             color: #333;
         }
+
         #addStockButton,
         .year-selector select {
             padding: 10px 16px;
@@ -100,6 +101,7 @@
             margin-bottom: 20px; /* רווח מתחת לכותרת */
             font-size: 24px; /* גודל פונט מוגדל */
         }
+
         .tab-container {
             width: 100%;
             max-width: 800px;
@@ -135,12 +137,9 @@
             height: 500px; /* קבע גובה קבוע עם גלילה */
             overflow-y: auto;
         }
-
-   
-
     </style>
 
-    
+
 
 </head>
 
@@ -163,14 +162,14 @@
 
     </div>
     <div style="text-align: left;">
-        <h4>Absolute Success Rate: @ViewBag.AbsoluteSuccessRate.ToString("0.00") %</h4>
-        <h4>Relative Success Rate (vs. SPX): @ViewBag.RelativeSuccessRate %</h4>
+        @*<h4>Absolute Success Rate: @ViewBag.AbsoluteSuccessRate.ToString("0.00") %</h4>
+            <h4>Relative Success Rate (vs. SPX): @ViewBag.RelativeSuccessRate %</h4>*@
         @*   <h4>Total Market Performance: @ViewBag.TotalMarketPerformance.ToString("0.00") %</h4>*@
     </div>
-   
+
 
     <div id="table" class="page">
-    
+
         <h1 class="text-center mb-4">Trading</h1>
 
         <div class="layout-container">
@@ -202,10 +201,11 @@
                                     @item.ProfitLossPercentage.ToString("0.00") %
                                 </td>
                                 <td>
-                                    <form action="/Portfolio/DeleteStock" method="post">
-                                        <input type="hidden" name="stock" value="@item.Stock" />
-                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                                    </form>
+                                    <!-- כפתור לפתיחת ה-Modal -->
+                                    <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#sellStockModal"
+                                            data-id="@item.ID" data-stock="@item.Stock" data-remaining="@item.Quantity - @item.Sold">
+                                        Sell
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -238,20 +238,53 @@
         </div>
     </div>
     <!--<div class="content">-->
-        <!-- עמוד ראשון: גרף Top Earning -->
-        <!--<div id="top-earning" class="page active">
-            <h2>Top 10 Earning Stocks</h2>
-            <canvas id="topEarningChart"></canvas>
-        </div>-->
-
-        <!-- עמוד שני: גרף Bottom Losing -->
-        <!--<div id="bottom-losing" class="page">
+    <!-- עמוד ראשון: גרף Top Earning -->
+    <!--<div id="top-earning" class="page active">
+        <h2>Top 10 Earning Stocks</h2>
+        <canvas id="topEarningChart"></canvas>
+    </div>-->
+    <!-- עמוד שני: גרף Bottom Losing -->
+    <!--<div id="bottom-losing" class="page">
             <h2>Bottom 10 Losing Stocks</h2>
             <canvas id="bottomLosingChart"></canvas>
         </div>
 
     </div>-->
 </body>
+
+
+<div class="modal fade" id="sellStockModal" tabindex="-1" aria-labelledby="sellStockModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sellStockModalLabel">Sell Stock</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="sellStockForm" action="/Portfolio/SellStock" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="stockId" />
+                    <div class="mb-3">
+                        <label for="stockName" class="form-label">Stock:</label>
+                        <input type="text" id="stockName" class="form-control" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label for="sellQuantity" class="form-label">Quantity to Sell:</label>
+                        <input type="number" id="sellQuantity" name="sellQuantity" class="form-control" step="0.01" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="sellPrice" class="form-label">Sell Price ($):</label>
+                        <input type="number" id="sellPrice" name="sellPrice" class="form-control" step="0.01" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Sell</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <!-- Modal להוספת מניה -->
 <div class="modal fade" id="addStockModal" tabindex="-1" aria-labelledby="addStockModalLabel" aria-hidden="true">
@@ -309,6 +342,19 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (!isNaN(value)) {
             cell.style.color = value < 0 ? "red" : "green";
         }
+    });
+
+    const sellStockModal = document.getElementById('sellStockModal');
+    sellStockModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget; // כפתור שפתח את ה-Modal
+        const stockId = button.getAttribute('data-id');
+        const stockName = button.getAttribute('data-stock');
+        const remainingQuantity = button.getAttribute('data-remaining');
+
+        // מילוי הנתונים ב-Modal
+        document.getElementById('stockId').value = stockId;
+        document.getElementById('stockName').value = stockName;
+        document.getElementById('sellQuantity').setAttribute('max', remainingQuantity);
     });
 
     // 2. Pie Chart Data
